@@ -48,6 +48,28 @@ return {col:col,ph:ph,ctx:ctx};}
 function graf2(cur,prev,col,lp,lc){function yv(v){return 92-Math.round(v/Math.max(cur,prev,1)*55);}
 var y1=yv(prev),y2=yv(cur);
 return '<svg viewBox="0 0 320 118" style="width:100%;height:auto;display:block"><line x1="20" y1="92" x2="300" y2="92" stroke="#D5E0E8" stroke-width="1"/><line x1="70" y1="'+y1+'" x2="250" y2="'+y2+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/><circle cx="70" cy="'+y1+'" r="5" fill="#B0B0B0"/><circle cx="250" cy="'+y2+'" r="5" fill="'+col+'"/><text x="70" y="'+(y1-10)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="#55708A">'+nfmt(prev)+'</text><text x="250" y="'+(y2-10)+'" text-anchor="middle" font-size="13" font-weight="bold" fill="'+col+'">'+nfmt(cur)+'</text><text x="70" y="108" text-anchor="middle" font-size="11" fill="#55708A">'+lp+'</text><text x="250" y="108" text-anchor="middle" font-size="11" fill="#55708A">'+lc+'</text></svg>';}
+function mesi12(p){var NM=["GEN","FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"];var n=(p&&p.length>=10)?parseInt(p.slice(3,5),10):NaN;if(!(n>=1&&n<=12))return null;var o=[];for(var i=0;i<12;i++)o.push(NM[(n-1+i)%12]);return o;}
+function graf12(mc,mp,col,lp,lc,per){
+var MESI=mesi12(per);
+var all=[1];if(mc)all=all.concat(mc);if(mp)all=all.concat(mp);
+var mx=Math.max.apply(null,all);
+function fy(v){var r=mx<10?Math.round(v*10)/10:Math.round(v);return String(r).replace(".",",");}
+function X(i){return 38+i*(266/11);}function Y(v){return 120-86*(v/mx);}
+function pts(arr){var s="";for(var i=0;i<12;i++)s+=(i?" ":"")+X(i).toFixed(1)+","+Y(arr[i]).toFixed(1);return s;}
+function dots(arr,c,r){var s="";for(var i=0;i<12;i++)s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(arr[i]).toFixed(1)+'" r="'+r+'" fill="'+c+'"/>';return s;}
+var svg='<svg viewBox="0 0 320 152" style="width:100%;height:auto;display:block">'
++'<line x1="34" y1="120" x2="308" y2="120" stroke="#D5E0E8"/><line x1="34" y1="77" x2="308" y2="77" stroke="#EFF5F9"/><line x1="34" y1="34" x2="308" y2="34" stroke="#EFF5F9"/>'
++'<text x="30" y="123" text-anchor="end" font-size="8" fill="#8AA0B5">0</text>'
++'<text x="30" y="80" text-anchor="end" font-size="8" fill="#8AA0B5">'+fy(mx/2)+'</text>'
++'<text x="30" y="37" text-anchor="end" font-size="8" fill="#8AA0B5">'+fy(mx)+'</text>';
+if(mp)svg+='<polyline points="'+pts(mp)+'" fill="none" stroke="#B0B0B0" stroke-width="2"/>'+dots(mp,"#B0B0B0",2);
+if(mc)svg+='<polyline points="'+pts(mc)+'" fill="none" stroke="'+col+'" stroke-width="2.5"/>'+dots(mc,col,2.6);
+if(MESI)for(var i=0;i<12;i++)svg+='<text x="'+X(i).toFixed(1)+'" y="134" text-anchor="middle" font-size="7" fill="#8AA0B5">'+MESI[i]+'</text>';
+var lg='',lx=38;
+if(mp){lg+='<line x1="'+lx+'" y1="146" x2="'+(lx+16)+'" y2="146" stroke="#B0B0B0" stroke-width="2"/><circle cx="'+(lx+8)+'" cy="146" r="2" fill="#B0B0B0"/><text x="'+(lx+20)+'" y="149" font-size="9" fill="#55708A">'+lp+'</text>';lx+=88;}
+if(mc)lg+='<line x1="'+lx+'" y1="146" x2="'+(lx+16)+'" y2="146" stroke="'+col+'" stroke-width="2.5"/><circle cx="'+(lx+8)+'" cy="146" r="2.4" fill="'+col+'"/><text x="'+(lx+20)+'" y="149" font-size="9" font-weight="bold" fill="'+col+'">'+lc+'</text>';
+return svg+lg+'</svg>';
+}
 function nomeSez(n){var M={"RIPARTITORI RISCALDAMENTO":"Riscaldamento (ripartitori)","CONTAENERGIA RISCALDAMENTO":"Riscaldamento (contaenergia)","ACQUA CALDA SANITARIA":"Acqua calda sanitaria","ACQUA FREDDA":"Acqua fredda"};return M[n]||n;}
 function thh(t,al){return '<th style="font-size:.72rem;text-transform:uppercase;color:#55708A;text-align:'+al+';padding:8px 4px;border-bottom:2px solid #D5E0E8">'+t+"</th>";}
 function tdd(t,al,mono){return '<td style="padding:9px 4px;border-bottom:1px solid #D5E0E8;text-align:'+al+(mono?';font-family:Consolas,monospace':"")+'">'+t+"</td>";}
@@ -61,8 +83,10 @@ var out="";
 for(var k=0;k<x.s.length;k++){var s=x.s[k];var prog=s.r.length&&s.r[0].length===4;
 var card='<b style="font-size:.8rem;color:#1C7293;text-transform:uppercase;letter-spacing:.08em">'+nomeSez(s.n)+'</b>';
 card+='<div style="background:#132A4A;border-radius:12px;color:#BFD9E8;text-align:center;padding:16px;margin:10px 0"><div style="font-size:.8rem">Consumo del periodo</div><div style="font-size:2rem;font-weight:800;color:#02C39A;line-height:1.1">'+nfmt(s.t)+'</div><div style="font-size:.8rem">'+(s.u||"")+' &middot; periodo '+x.p+"</div></div>";
+var smc=(s.mc&&s.mc.length===12)?s.mc:null,smp=(s.mp&&s.mp.length===12)?s.mp:null;
 if(typeof s.ap!=="undefined"&&s.ap!==null&&s.t!==null){var f=frase(Number(s.t)||0,Number(s.ap),("cd" in s)?s.cd:null);
-card+='<div style="font-size:.92rem;font-weight:700;color:'+f.col+'">'+f.ph+"</div>"+f.ctx+graf2(Number(s.t)||0,Number(s.ap),f.col,lab(x.pp),lab(x.p));}
+card+='<div style="font-size:.92rem;font-weight:700;color:'+f.col+'">'+f.ph+"</div>"+f.ctx+((smc||smp)?graf12(smc,smp,f.col,lab(x.pp),lab(x.p),x.p):graf2(Number(s.t)||0,Number(s.ap),f.col,lab(x.pp),lab(x.p)));}
+else if(smc||smp)card+=graf12(smc,smp,"#065A82",lab(x.pp),lab(x.p),x.p);
 var h="",manca=false;
 if(prog){h='<table style="width:100%;border-collapse:collapse;margin-top:10px"><thead><tr>'+thh("Matricola","left")+thh("Lett. prec.","right")+thh("Lett. attuale","right")+thh("Consumo","right")+"</tr></thead><tbody>";
 for(var n=0;n<s.r.length;n++){var rr=s.r[n];if(rr[1]===null||rr[3]===null)manca=true;
@@ -83,25 +107,7 @@ var ph="",ctx="",col=prev!==null&&cur>prev?"#C00000":"#2E7D32";
 if(prev!==null){var f1=frase(cur,prev,(typeof x.cd!=="undefined")?x.cd:null);ph='<div style="font-size:.92rem;font-weight:700;color:'+f1.col+';margin-top:8px">'+f1.ph+"</div>";ctx=f1.ctx;col=f1.col;}
 var svg="";
 if((x.mc&&x.mc.length===12)||(x.mp&&x.mp.length===12)){
-var MESI=["LUG","AGO","SET","OTT","NOV","DIC","GEN","FEB","MAR","APR","MAG","GIU"];
-var mc=(x.mc&&x.mc.length===12)?x.mc:null,mp=(x.mp&&x.mp.length===12)?x.mp:null;
-var all=[1];if(mc)all=all.concat(mc);if(mp)all=all.concat(mp);
-var mx=Math.max.apply(null,all);
-function X(i){return 38+i*(266/11);}function Y(v){return 120-86*(v/mx);}
-function pts(arr){var s="";for(var i=0;i<12;i++)s+=(i?" ":"")+X(i).toFixed(1)+","+Y(arr[i]).toFixed(1);return s;}
-function dots(arr,c,r){var s="";for(var i=0;i<12;i++)s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(arr[i]).toFixed(1)+'" r="'+r+'" fill="'+c+'"/>';return s;}
-svg='<svg viewBox="0 0 320 152" style="width:100%;height:auto;display:block">'
-+'<line x1="34" y1="120" x2="308" y2="120" stroke="#D5E0E8"/><line x1="34" y1="77" x2="308" y2="77" stroke="#EFF5F9"/><line x1="34" y1="34" x2="308" y2="34" stroke="#EFF5F9"/>'
-+'<text x="30" y="123" text-anchor="end" font-size="8" fill="#8AA0B5">0</text>'
-+'<text x="30" y="80" text-anchor="end" font-size="8" fill="#8AA0B5">'+Math.round(mx/2)+'</text>'
-+'<text x="30" y="37" text-anchor="end" font-size="8" fill="#8AA0B5">'+Math.round(mx)+'</text>';
-if(mp)svg+='<polyline points="'+pts(mp)+'" fill="none" stroke="#B0B0B0" stroke-width="2"/>'+dots(mp,"#B0B0B0",2);
-if(mc)svg+='<polyline points="'+pts(mc)+'" fill="none" stroke="'+col+'" stroke-width="2.5"/>'+dots(mc,col,2.6);
-for(var i=0;i<12;i++)svg+='<text x="'+X(i).toFixed(1)+'" y="134" text-anchor="middle" font-size="7" fill="#8AA0B5">'+MESI[i]+'</text>';
-var lg='',lx=38;
-if(mp){lg+='<line x1="'+lx+'" y1="146" x2="'+(lx+16)+'" y2="146" stroke="#B0B0B0" stroke-width="2"/><circle cx="'+(lx+8)+'" cy="146" r="2" fill="#B0B0B0"/><text x="'+(lx+20)+'" y="149" font-size="9" fill="#55708A">'+lab(x.pp)+'</text>';lx+=88;}
-if(mc)lg+='<line x1="'+lx+'" y1="146" x2="'+(lx+16)+'" y2="146" stroke="'+col+'" stroke-width="2.5"/><circle cx="'+(lx+8)+'" cy="146" r="2.4" fill="'+col+'"/><text x="'+(lx+20)+'" y="149" font-size="9" font-weight="bold" fill="'+col+'">'+lab(x.p)+'</text>';
-svg+=lg+'</svg>';
+svg=graf12((x.mc&&x.mc.length===12)?x.mc:null,(x.mp&&x.mp.length===12)?x.mp:null,col,lab(x.pp),lab(x.p),x.p);
 }else if(prev!==null){svg=graf2(cur,prev,col,lab(x.pp),lab(x.p));}
 if(svg||ph){var cmp='<div id="spCmp" style="background:#fff;border-radius:14px;padding:16px 20px;margin-bottom:14px;box-shadow:0 4px 16px rgba(16,40,60,.08)"><b style="font-size:.8rem;color:#1C7293;text-transform:uppercase;letter-spacing:.08em">Confronto con l\'anno precedente</b>'+ph+ctx+svg+"</div>";
 document.getElementById("spTot").parentNode.insertAdjacentHTML("afterend",cmp);}
